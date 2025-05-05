@@ -1,0 +1,20 @@
+[
+  {
+    "code": "booked",
+    "label": "Đã đặt",
+    "bgColor": "#FFF3CD",
+    "borderColor": "#FFB100"
+  },
+  {
+    "code": "in_use",
+    "label": "Đang họp",
+    "bgColor": "#D1ECF1",
+    "borderColor": "#0C5460"
+  },
+  {
+    "code": "free",
+    "label": "Còn trống",
+    "bgColor": "#D4EDDA",
+    "borderColor": "#155724"
+  }
+]
