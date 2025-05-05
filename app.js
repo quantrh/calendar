@@ -22,7 +22,14 @@ function loadMeta() {
     .then(res => res.json())
     .then(data => {
       meta = data;
+      
+      const layoutSelect = document.getElementById("layoutRoomFilter");
       data.rooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room;
+        option.textContent = room;
+        layoutSelect.appendChild(option);
+
         const option = document.createElement('option');
         option.value = room;
         option.textContent = room;
@@ -145,7 +152,47 @@ function renderCalendarView() {
   calendar.render();
 }
 
+
 function renderRoomLayout() {
+  const grid = document.getElementById("roomGrid");
+  const filterDate = document.getElementById("layoutDate").value;
+  const selectedRoom = document.getElementById("layoutRoomFilter").value;
+  grid.innerHTML = "";
+
+  const date = filterDate || new Date().toISOString().split("T")[0];
+  const rooms = meta.rooms || [];
+
+  rooms.forEach(room => {
+    if (selectedRoom !== "all" && room !== selectedRoom) return;
+
+    const card = document.createElement("div");
+    card.className = "room-card";
+    const roomBookings = bookings.filter(b => b.room === room && b.date === date);
+
+    let content = `<h3>${room}</h3>`;
+    if (roomBookings.length === 0) {
+      card.classList.add("trong");
+      content += `<small>Trống</small>`;
+    } else {
+      roomBookings.forEach(b => {
+        const start = b.startTime;
+        const end = b.endTime;
+        const title = `<div style="margin-top: 4px;">
+          <strong>${start} - ${end}</strong><br/>
+          <small>${b.group}</small><br/>
+          <small>${b.purpose}</small>
+        </div>`;
+        content += title;
+        card.classList.add("booked");
+      });
+    }
+
+    content += `<small><a href="#">View</a></small>`;
+    card.innerHTML = content;
+    grid.appendChild(card);
+  });
+}
+
   const grid = document.getElementById("roomGrid");
   grid.innerHTML = "";
   const allRooms = meta.rooms || ['Hà Nội', 'HCM'];
@@ -176,5 +223,48 @@ function renderRoomLayout() {
   });
 }
 
+
 loadMeta();
+document.getElementById("layoutDate").value = new Date().toISOString().split("T")[0];
+document.getElementById("layoutDate").addEventListener("change", renderRoomLayout);
+document.getElementById("layoutRoomFilter").addEventListener("change", renderRoomLayout);
+
 loadBookings();
+
+
+function renderCalendarView() {
+  const calendarEl = document.getElementById('fullCalendar');
+  calendarEl.innerHTML = '';
+
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+    initialView: 'resourceTimelineDay',
+    locale: 'vi',
+    height: 'auto',
+    slotMinTime: '08:00:00',
+    slotMaxTime: '18:00:00',
+    resourceAreaHeaderContent: 'Phòng họp',
+    resources: meta.rooms.map(room => ({ id: room, title: room })),
+    events: bookings.map((b, index) => ({
+      id: String(index),
+      resourceId: b.room,
+      title: `${b.group} - ${b.purpose}`,
+      start: `${b.date}T${b.startTime}`,
+      end: `${b.date}T${b.endTime}`,
+      backgroundColor: '#cfe2ff',
+      borderColor: '#3399ff',
+      textColor: '#000'
+    })),
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'resourceTimelineDay,resourceTimelineWeek'
+    },
+    eventClick: function(info) {
+      const b = bookings[parseInt(info.event.id)];
+      alert(`Phòng: ${b.room}\nNhóm: ${b.group}\nThời gian: ${b.startTime} - ${b.endTime}\nMục đích: ${b.purpose}`);
+    }
+  });
+
+  calendar.render();
+}
